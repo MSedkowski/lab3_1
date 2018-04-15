@@ -34,18 +34,20 @@ public class BookKeeperTest {
     private ClientData client;
 
     private ProductData productData;
+    private Money net;
+    private RequestItem item;
 
     @Before
     public void setUp() {
         bookKeeper = new BookKeeper(invoiceFactory);
         client = new ClientData(Id.generate(), "Janek");
+        productData = mock(ProductData.class);
+        net = new Money(10);
+        item = new RequestItem(productData, 10, net);
     }
 
     @Test
     public void createInvoiceWithOnePosition() {
-        productData = mock(ProductData.class);
-        Money net = new Money(10);
-        RequestItem item = new RequestItem(productData, 10, net);
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
         when(productData.getType()).thenReturn(ProductType.FOOD);
@@ -58,10 +60,7 @@ public class BookKeeperTest {
 
     @Test
     public void createInvoiceWithTwoPosition() {
-        productData = mock(ProductData.class);
         ProductData productData2 = mock(ProductData.class);
-        Money net = new Money(10);
-        RequestItem item = new RequestItem(productData, 10, net);
         RequestItem item2 = new RequestItem(productData2, 12, net);
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
@@ -77,6 +76,29 @@ public class BookKeeperTest {
         verify(taxPolicy, times(1)).calculateTax(productData2.getType(), net);
     }
 
-    
+
+    @Test
+    public void createInvoiceWithTwoSamePositions() {
+        List<RequestItem> listOfItems = new ArrayList<>();
+        listOfItems.add(item);
+        listOfItems.add(item);
+        when(productData.getType()).thenReturn(ProductType.FOOD);
+        when(invoiceRequest.getClientData()).thenReturn(client);
+        when(invoiceRequest.getItems()).thenReturn(listOfItems);
+        when(taxPolicy.calculateTax(productData.getType(), net)).thenReturn(new Tax(net, "jedzenie"));
+        Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+        verify(taxPolicy, times(2)).calculateTax(productData.getType(), net);
+        assertThat(newInvoice.getItems().size(), is(2));
+    }
+
+    @Test
+    public void createInvoiceWithoutAnyPosition() {
+        when(productData.getType()).thenReturn(ProductType.FOOD);
+        when(invoiceRequest.getClientData()).thenReturn(client);
+        when(invoiceRequest.getItems()).thenReturn(new ArrayList<RequestItem>());
+        Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+        assertThat(newInvoice.getItems().size(), is(0));
+    }
+
 
 }
