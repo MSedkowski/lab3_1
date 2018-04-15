@@ -50,11 +50,17 @@ public class BookKeeperTest {
     public void createInvoiceWithOnePosition() {
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
+        Tax tax = new TaxBuilder()
+                        .withAmount(net)
+                        .build();
+
         when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
+
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
         assertThat(newInvoice.getItems().size(), is(1));
     }
 
@@ -68,13 +74,24 @@ public class BookKeeperTest {
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
         listOfItems.add(item2);
+        Tax tax = new TaxBuilder()
+                .withAmount(net)
+                .build();
+        Tax tax2 = new TaxBuilder()
+                .withAmount(net)
+                .withDescription("Leki")
+                .build();
+
+
         when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(item2.getProductData().getType()).thenReturn(ProductType.DRUG);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
-        when(taxPolicy.calculateTax(item2.getProductData().getType(), net)).thenReturn(new Tax(net, "leki"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
+        when(taxPolicy.calculateTax(item2.getProductData().getType(), net)).thenReturn(tax2);
+
         bookKeeper.issuance(invoiceRequest, taxPolicy);
+
         verify(taxPolicy, times(1)).calculateTax(item.getProductData().getType(), net);
         verify(taxPolicy, times(1)).calculateTax(item2.getProductData().getType(), net);
     }
@@ -85,11 +102,17 @@ public class BookKeeperTest {
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
         listOfItems.add(item);
+        Tax tax = new TaxBuilder()
+                .withAmount(net)
+                .build();
+
         when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
+
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
         verify(taxPolicy, times(2)).calculateTax(item.getProductData().getType(), net);
         assertThat(newInvoice.getItems().size(), is(2));
     }
@@ -99,8 +122,10 @@ public class BookKeeperTest {
         when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(new ArrayList<RequestItem>());
+
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+
         assertThat(newInvoice.getItems().size(), is(0));
     }
-    
+
 }
