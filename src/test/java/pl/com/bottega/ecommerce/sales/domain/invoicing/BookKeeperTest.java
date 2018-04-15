@@ -43,17 +43,17 @@ public class BookKeeperTest {
         client = new ClientData(Id.generate(), "Janek");
         productData = mock(ProductData.class);
         net = new Money(10);
-        item = new RequestItem(productData, 10, net);
+        item = new RequestItemBuilder().build();
     }
 
     @Test
     public void createInvoiceWithOnePosition() {
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
-        when(productData.getType()).thenReturn(ProductType.FOOD);
+        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(ProductType.FOOD, net)).thenReturn(new Tax(net, "jedzenie"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
         assertThat(newInvoice.getItems().size(), is(1));
     }
@@ -61,19 +61,22 @@ public class BookKeeperTest {
     @Test
     public void createInvoiceWithTwoPosition() {
         ProductData productData2 = mock(ProductData.class);
-        RequestItem item2 = new RequestItem(productData2, 12, net);
+        RequestItem item2 = new RequestItemBuilder()
+                                            .withProductData(productData2)
+                                            .withQuantity(12)
+                                            .build();
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
         listOfItems.add(item2);
-        when(productData.getType()).thenReturn(ProductType.FOOD);
-        when(productData2.getType()).thenReturn(ProductType.DRUG);
+        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
+        when(item2.getProductData().getType()).thenReturn(ProductType.DRUG);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(productData.getType(), net)).thenReturn(new Tax(net, "jedzenie"));
-        when(taxPolicy.calculateTax(productData2.getType(), net)).thenReturn(new Tax(net, "leki"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
+        when(taxPolicy.calculateTax(item2.getProductData().getType(), net)).thenReturn(new Tax(net, "leki"));
         bookKeeper.issuance(invoiceRequest, taxPolicy);
-        verify(taxPolicy, times(1)).calculateTax(productData.getType(), net);
-        verify(taxPolicy, times(1)).calculateTax(productData2.getType(), net);
+        verify(taxPolicy, times(1)).calculateTax(item.getProductData().getType(), net);
+        verify(taxPolicy, times(1)).calculateTax(item2.getProductData().getType(), net);
     }
 
 
@@ -82,23 +85,22 @@ public class BookKeeperTest {
         List<RequestItem> listOfItems = new ArrayList<>();
         listOfItems.add(item);
         listOfItems.add(item);
-        when(productData.getType()).thenReturn(ProductType.FOOD);
+        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(productData.getType(), net)).thenReturn(new Tax(net, "jedzenie"));
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(new Tax(net, "jedzenie"));
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
-        verify(taxPolicy, times(2)).calculateTax(productData.getType(), net);
+        verify(taxPolicy, times(2)).calculateTax(item.getProductData().getType(), net);
         assertThat(newInvoice.getItems().size(), is(2));
     }
 
     @Test
     public void createInvoiceWithoutAnyPosition() {
-        when(productData.getType()).thenReturn(ProductType.FOOD);
+        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(new ArrayList<RequestItem>());
         Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
         assertThat(newInvoice.getItems().size(), is(0));
     }
-
-
+    
 }
