@@ -9,6 +9,7 @@ import pl.com.bottega.ecommerce.sales.domain.client.Client;
 import pl.com.bottega.ecommerce.sales.domain.client.ClientRepository;
 import pl.com.bottega.ecommerce.sales.domain.equivalent.SuggestionService;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductRepository;
 import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
@@ -37,7 +38,7 @@ public class AddProductCommandHandlerTest {
         addProductCommand = new AddProductCommand(Id.generate(), Id.generate(), 12);
         addProductCommandHandler = new AddProductCommandHandler();
         productRepository = mock(ProductRepository.class);
-        product = mock(Product.class);
+        product = new ProductBuilder().build();
         clientRepository = mock(ClientRepository.class);
         client = new Client();
         systemContext = new SystemContext();
@@ -57,8 +58,6 @@ public class AddProductCommandHandlerTest {
 
     @Test
     public void ifReservationIsSavedWhenProductIsAvailable() {
-        when(product.isAvailable()).thenReturn(true);
-
         addProductCommandHandler.handle(addProductCommand);
         verify(reservationRepository, times(1)).save(reservation);
         verify(suggestionService, times(0)).suggestEquivalent(product, client);
@@ -66,8 +65,6 @@ public class AddProductCommandHandlerTest {
 
     @Test
     public void ifReservationIsSavedWhenProductIsNotAvailable() {
-        when(product.isAvailable()).thenReturn(false);
-
         addProductCommandHandler.handle(addProductCommand);
         verify(reservationRepository, times(1)).save(reservation);
         verify(suggestionService, times(1)).suggestEquivalent(product, client);

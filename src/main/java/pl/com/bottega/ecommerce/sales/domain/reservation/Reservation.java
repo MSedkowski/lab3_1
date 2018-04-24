@@ -19,13 +19,13 @@ public class Reservation extends BaseAggregateRoot{
 		OPENED, CLOSED
 	}
 
-	
+
 	private ReservationStatus status;
 
-	
+
 	private List<ReservationItem> items;
 
-	
+
 	private ClientData clientData;
 
 	private Date createDate;

@@ -10,6 +10,7 @@ import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
 import pl.com.bottega.ecommerce.sales.domain.invoicing.*;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductDataBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
@@ -41,7 +42,7 @@ public class BookKeeperTest {
     public void setUp() {
         bookKeeper = new BookKeeper(invoiceFactory);
         client = new ClientData(Id.generate(), "Janek");
-        productData = mock(ProductData.class);
+        productData = new ProductDataBuilder().build();
         net = new Money(10);
         item = new RequestItemBuilder().build();
     }
@@ -54,7 +55,6 @@ public class BookKeeperTest {
                         .withAmount(net)
                         .build();
 
-        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
         when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
@@ -66,7 +66,11 @@ public class BookKeeperTest {
 
     @Test
     public void createInvoiceWithTwoPosition() {
-        ProductData productData2 = mock(ProductData.class);
+        ProductData productData2 = new ProductDataBuilder()
+                                            .withName("default2")
+                                            .withPrice(new Money(12))
+                                            .withType(ProductType.DRUG)
+                                            .build();
         RequestItem item2 = new RequestItemBuilder()
                                             .withProductData(productData2)
                                             .withQuantity(12)
@@ -83,8 +87,6 @@ public class BookKeeperTest {
                 .build();
 
 
-        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
-        when(item2.getProductData().getType()).thenReturn(ProductType.DRUG);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
         when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
@@ -106,7 +108,6 @@ public class BookKeeperTest {
                 .withAmount(net)
                 .build();
 
-        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(listOfItems);
         when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
@@ -119,7 +120,6 @@ public class BookKeeperTest {
 
     @Test
     public void createInvoiceWithoutAnyPosition() {
-        when(item.getProductData().getType()).thenReturn(ProductType.FOOD);
         when(invoiceRequest.getClientData()).thenReturn(client);
         when(invoiceRequest.getItems()).thenReturn(new ArrayList<RequestItem>());
 
