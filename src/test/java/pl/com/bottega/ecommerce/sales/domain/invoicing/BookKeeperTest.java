@@ -7,15 +7,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
-import pl.com.bottega.ecommerce.sales.domain.invoicing.*;
-import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductDataBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -34,7 +31,6 @@ public class BookKeeperTest {
 
     private ClientData client;
 
-    private ProductData productData;
     private Money net;
     private RequestItem item;
 
@@ -42,7 +38,6 @@ public class BookKeeperTest {
     public void setUp() {
         bookKeeper = new BookKeeper(invoiceFactory);
         client = new ClientData(Id.generate(), "Janek");
-        productData = new ProductDataBuilder().build();
         net = new Money(10);
         item = new RequestItemBuilder().build();
     }
@@ -100,22 +95,14 @@ public class BookKeeperTest {
 
 
     @Test
-    public void createInvoiceWithTwoSamePositions() {
-        List<RequestItem> listOfItems = new ArrayList<>();
-        listOfItems.add(item);
-        listOfItems.add(item);
-        Tax tax = new TaxBuilder()
-                .withAmount(net)
-                .build();
-
-        when(invoiceRequest.getClientData()).thenReturn(client);
-        when(invoiceRequest.getItems()).thenReturn(listOfItems);
-        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
-
-        Invoice newInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
-
+    public void createInvoiceWithTwoSamePositionsCheckIfCaculateTaxIsInvocatedCorrectNumberOfTimes() {
+        createNewInvoice();
         verify(taxPolicy, times(2)).calculateTax(item.getProductData().getType(), net);
-        assertThat(newInvoice.getItems().size(), is(2));
+    }
+
+    @Test
+    public void createInvoiceWithTwoSamePositionsCheckIfNumberOfItemsIsOk() {
+        assertThat(createNewInvoice().getItems().size(), is(2));
     }
 
     @Test
@@ -128,4 +115,18 @@ public class BookKeeperTest {
         assertThat(newInvoice.getItems().size(), is(0));
     }
 
+    private Invoice createNewInvoice() {
+        List<RequestItem> listOfItems = new ArrayList<>();
+        listOfItems.add(item);
+        listOfItems.add(item);
+        Tax tax = new TaxBuilder()
+                .withAmount(net)
+                .build();
+
+        when(invoiceRequest.getClientData()).thenReturn(client);
+        when(invoiceRequest.getItems()).thenReturn(listOfItems);
+        when(taxPolicy.calculateTax(item.getProductData().getType(), net)).thenReturn(tax);
+
+        return bookKeeper.issuance(invoiceRequest, taxPolicy);
+    }
 }
