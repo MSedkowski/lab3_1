@@ -1,14 +1,13 @@
 package pl.com.bottega.ecommerce.sales.domain.invoicing;
 
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductDataBuilder;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
-import static org.mockito.Mockito.mock;
-
 public class RequestItemBuilder {
-    ProductData productData = mock(ProductData.class);
-    int quantity = 10;
-    Money totalCost = new Money(10);
+    private ProductData productData = new ProductDataBuilder().build();
+    private int quantity = 10;
+    private Money totalCost = new Money(10);
 
     public RequestItemBuilder() { }
 

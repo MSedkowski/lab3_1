@@ -65,6 +65,7 @@ public class AddProductCommandHandlerTest {
 
     @Test
     public void ifReservationIsSavedWhenProductIsNotAvailable() {
+        product.markAsRemoved();
         addProductCommandHandler.handle(addProductCommand);
         verify(reservationRepository, times(1)).save(reservation);
         verify(suggestionService, times(1)).suggestEquivalent(product, client);
